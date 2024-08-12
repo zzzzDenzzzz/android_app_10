@@ -29,12 +29,14 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void fetchData(String urlString, TextView tw) {
-        Thread thread = new Thread(() -> {
+        new Thread(() -> {
             String result;
+            boolean isError = false;
+
             try {
                 URL url = new URL(urlString);
                 HttpURLConnection urlConnection = (HttpURLConnection) url.openConnection();
-                try(BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(urlConnection.getInputStream()))) {
+                try (BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(urlConnection.getInputStream()))) {
                     StringBuilder stringBuilder = new StringBuilder();
                     String line;
                     while ((line = bufferedReader.readLine()) != null) {
@@ -47,16 +49,20 @@ public class MainActivity extends AppCompatActivity {
             } catch (Exception e) {
                 e.printStackTrace();
                 result = "Ошибка: " + e.getMessage();
-                String finalResult1 = result;
-                runOnUiThread(() -> {
-                    errorTextView.setText(finalResult1);
-                    errorTextView.setVisibility(View.VISIBLE);
-                });
+                isError = true;
             }
 
             String finalResult = result;
-            runOnUiThread(() -> tw.setText(finalResult));
-        });
-        thread.start();
+            boolean finalIsError = isError;
+
+            runOnUiThread(() -> {
+                if (finalIsError) {
+                    errorTextView.setText(finalResult);
+                    errorTextView.setVisibility(View.VISIBLE);
+                } else {
+                    tw.setText(finalResult);
+                }
+            });
+        }).start();
     }
 }
